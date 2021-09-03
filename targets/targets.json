@@ -4355,7 +4355,6 @@
             }
         },
         "macros_add": [
-            "MBED_TICKLESS",
             "EXTRA_IDLE_STACK_REQUIRED"
         ],
         "overrides": {
@@ -4394,6 +4393,31 @@
             "0866"
         ],
         "device_name": "STM32WL55JCIx"
+    },
+    "LORA_E5": {
+        "inherits": [
+            "MCU_STM32WLE5xC"
+        ],
+        "device_name": "STM32WLE5JCIx"
+    },
+    "LORA_E5_DEV_BOARD": {
+        "inherits": [
+            "LORA_E5"
+        ],
+        "macros_add": [
+            "LED1=PB_5", 
+            "EN_3V3=PA_9", 
+            "EN_5V=PB_10", 
+            "BUTTON1=PB_13",
+            "BUTTON2=PA_0",
+            "RS485_REDE=PB_4"
+        ]
+    },
+    "LORA_E5_PROTAG": {
+        "inherits": [
+            "LORA_E5"
+        ],
+        "macros_add": []
     },
     "MCU_STM32WLE5xC": {
         "inherits": [

@@ -679,6 +679,7 @@ void STM32WL_LoRaRadio::wakeup()
     // now we should wait for the _busy line to go low
     if (_operating_mode == MODE_SLEEP) {
 #if MBED_CONF_STM32WL_LORA_DRIVER_SLEEP_MODE == 1
+        // rtos::ThisThread::sleep_for(4ms);
         wait_us(3500);
         // whenever we wakeup from Cold sleep state, we need to perform
         // image calibration
@@ -692,7 +693,10 @@ void STM32WL_LoRaRadio::sleep(void)
 {
 #if MBED_CONF_STM32WL_LORA_DRIVER_SLEEP_MODE == 1
     // cold start, power consumption 160 nA
-    sleep_state = 0x00;
+    uint8_t sleep_state = 0x00;
+#else
+    // warm start set , power consumption 600 nA
+    uint8_t sleep_state = 0x04;
 #endif
 
     /* switch the antenna OFF by SW */
@@ -700,8 +704,7 @@ void STM32WL_LoRaRadio::sleep(void)
     Radio_SMPS_Set(SMPS_DRIVE_SETTING_DEFAULT);
 
 
-    // warm start set , power consumption 600 nA
-    uint8_t sleep_state = 0x04;
+    
     write_opmode_command(RADIO_SET_SLEEP, &sleep_state, 1);
 
     _operating_mode = MODE_SLEEP;

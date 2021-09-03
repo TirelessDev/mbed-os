@@ -11,7 +11,7 @@
 #ifndef MBED_LORA_RADIO_DRV_STM32WL_RADIO_DRIVER_H_
 #define MBED_LORA_RADIO_DRV_STM32WL_RADIO_DRIVER_H_
 
-#include "LoRaRadio.h"
+#include "lorawan/LoRaRadio.h"
 
 #define RFO_LP                                      1
 #define RFO_HP                                      2
