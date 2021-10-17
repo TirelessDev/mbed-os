@@ -138,7 +138,7 @@
 
 /* If the target has no SPI support then SDCard is not supported */
 #if DEVICE_SPI
-
+#include "mbed.h"
 #include "SDBlockDevice.h"
 #include "rtos/ThisThread.h"
 #include "platform/mbed_debug.h"
@@ -166,7 +166,7 @@ using namespace std::chrono;
 
 #define SD_COMMAND_TIMEOUT                       milliseconds{MBED_CONF_SD_CMD_TIMEOUT}
 #define SD_CMD0_GO_IDLE_STATE_RETRIES            MBED_CONF_SD_CMD0_IDLE_STATE_RETRIES
-#define SD_DBG                                   0      /*!< 1 - Enable debugging */
+#define SD_DBG                                   1      /*!< 1 - Enable debugging */
 #define SD_CMD_TRACE                             0      /*!< 1 - Enable SD command tracing */
 
 #define SD_BLOCK_DEVICE_ERROR_WOULD_BLOCK        -5001  /*!< operation would block */
@@ -335,7 +335,7 @@ int SDBlockDevice::_initialise_card()
         return status;
     }
 
-    // Check if card supports voltage range: 3.3V
+    // // Check if card supports voltage range: 3.3V
     if (!(response & OCR_3_3V)) {
         _card_type = CARD_UNKNOWN;
         status = SD_BLOCK_DEVICE_ERROR_UNUSABLE;
@@ -353,12 +353,14 @@ int SDBlockDevice::_initialise_card()
      * "0" indicates completion of initialization. The host repeatedly issues ACMD41 until
      * this bit is set to "0".
      */
+    sleep_manager_lock_deep_sleep();
     _spi_timer.start();
     do {
         status = _cmd(ACMD41_SD_SEND_OP_COND, arg, 1, &response);
+        // thread_sleep_for(5);
     } while ((response & R1_IDLE_STATE) && (_spi_timer.elapsed_time() < SD_COMMAND_TIMEOUT));
     _spi_timer.stop();
-
+    sleep_manager_unlock_deep_sleep();
     // Initialization complete: ACMD41 successful
     if ((BD_ERROR_OK != status) || (0x00 != response)) {
         _card_type = CARD_UNKNOWN;
@@ -757,7 +759,7 @@ int SDBlockDevice::_cmd(SDBlockDevice::cmdSupported cmd, uint32_t arg, bool isAc
     // No need to wait for card to be ready when sending the stop command
     if (CMD12_STOP_TRANSMISSION != cmd) {
         if (false == _wait_ready(SD_COMMAND_TIMEOUT)) {
-            debug_if(SD_DBG, "Card not ready yet \n");
+            debug_if(SD_DBG, "Card not ready yet (CMD12) \n");
         }
     }
 
@@ -768,7 +770,7 @@ int SDBlockDevice::_cmd(SDBlockDevice::cmdSupported cmd, uint32_t arg, bool isAc
             response = _cmd_spi(CMD55_APP_CMD, 0x0);
             // Wait for card to be ready after CMD55
             if (false == _wait_ready(SD_COMMAND_TIMEOUT)) {
-                debug_if(SD_DBG, "Card not ready yet \n");
+                debug_if(SD_DBG, "Card not ready yet (CMD55) \n");
             }
         }
 
@@ -1002,8 +1004,8 @@ uint8_t SDBlockDevice::_write(const uint8_t *buffer, uint8_t token, uint32_t len
     response = _spi.write(SPI_FILL_CHAR);
 
     // Wait for last block to be written
-    if (false == _wait_ready(SD_COMMAND_TIMEOUT)) {
-        debug_if(SD_DBG, "Card not ready yet \n");
+    if (false == _wait_ready(SD_COMMAND_TIMEOUT*10)) {
+        debug_if(SD_DBG, "Card not ready yet (write) \n");
     }
 
     return (response & SPI_DATA_RESPONSE_MASK);

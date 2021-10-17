@@ -34,6 +34,20 @@ extern "C" {
 #define TIMING_VAL_48M_CLK_1MHZ    0x00500A18  // Fast mode Plus with Rise Time = 60ns and Fall Time = 100ns
 #define I2C_PCLK_48M               48000000    // 48 MHz
 
+// Common settings: I2C clock = 32 MHz, Analog filter = ON, Digital filter coefficient = 0
+#define TIMING_VAL_32M_CLK_100KHZ  0x10E03E52  // Standard mode with Rise Time = 640ns and Fall Time = 20ns
+#define TIMING_VAL_32M_CLK_400KHZ  0x00B0122A  // Fast mode with Rise Time = 250ns and Fall Time = 100ns
+#define TIMING_VAL_32M_CLK_1MHZ    0x0030040E  // Fast mode Plus with Rise Time = 60ns and Fall Time = 100ns
+#define I2C_PCLK_32M               32000000    // 32 MHz
+
+
+// Common settings: I2C clock = 24 MHz, Analog filter = ON, Digital filter coefficient = 0
+#define TIMING_VAL_24M_CLK_100KHZ  0x10A02E3D  // Standard mode with Rise Time = 640ns and Fall Time = 20ns
+#define TIMING_VAL_24M_CLK_400KHZ  0x20200409  // Fast mode with Rise Time = 250ns and Fall Time = 100ns
+#define TIMING_VAL_24M_CLK_1MHZ    0x0020030A  // Fast mode Plus with Rise Time = 60ns and Fall Time = 60ns
+#define I2C_PCLK_24M               24000000    // 24 MHz
+
+
 #define I2C_IT_ALL (I2C_IT_ERRI|I2C_IT_TCI|I2C_IT_STOPI|I2C_IT_NACKI|I2C_IT_ADDRI|I2C_IT_RXI|I2C_IT_TXI)
 
 /*  Family specific settings for clock source */

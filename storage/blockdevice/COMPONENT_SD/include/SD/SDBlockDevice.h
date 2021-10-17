@@ -192,6 +192,9 @@ public:
      */
     virtual const char *get_type() const;
 
+    bool _is_initialized;
+    int _initialise_card();
+    mbed::SPI _spi;                       /**< SPI Class object */
 private:
     /* Commands : Listed below are commands supported
      * in SPI mode for SD card : Only Mandatory ones
@@ -248,7 +251,6 @@ private:
      *                  response from CMD0. R1_XXX_XXX for more response
      */
     uint32_t _go_idle_state();
-    int _initialise_card();
 
     mbed::bd_size_t _sectors;
     mbed::bd_size_t _sd_sectors();
@@ -259,7 +261,6 @@ private:
     mbed::Timer _spi_timer;               /**< Timer Class object used for busy wait */
     uint32_t _init_sck;             /**< Initial SPI frequency */
     uint32_t _transfer_sck;         /**< SPI frequency during data transfer/after initialization */
-    mbed::SPI _spi;                       /**< SPI Class object */
 
     /* SPI initialization function */
     void _spi_init();
@@ -288,7 +289,6 @@ private:
     PlatformMutex _mutex;
     static const uint32_t _block_size;
     uint32_t _erase_size;
-    bool _is_initialized;
     bool _dbg;
     uint32_t _init_ref_count;
 

@@ -114,6 +114,10 @@ struct i2c_s {
     uint8_t stop;
     uint8_t available_events;
 #endif
+#if (defined(I2C1_BASE) || defined(I2C2_BASE)) && (defined(TARGET_STM32WL) || defined(TARGET_STM32WB))
+    /* For these targets and these configurations deep sleep needs to be locked when I2C is in use, we need to track whether we already have a lock so we don't add more than needed. */
+    uint8_t deep_sleep_locks;
+#endif
 };
 
 struct flash_s {

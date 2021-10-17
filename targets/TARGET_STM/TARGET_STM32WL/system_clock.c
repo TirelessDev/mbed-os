@@ -51,7 +51,7 @@ MBED_WEAK void SetSysClock(void)
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
     RCC_OscInitStruct.MSIState = RCC_MSI_ON;
     RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
-    RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_11;
+    RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_9;  // 24 MHz
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
     MBED_ASSERT(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
     /** Configure the SYSCLKSource, HCLK, PCLK1 and PCLK2 clocks dividers

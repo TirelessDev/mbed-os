@@ -396,6 +396,7 @@ void i2c_sw_reset(i2c_t *obj)
 
 void i2c_init_internal(i2c_t *obj, const i2c_pinmap_t *pinmap)
 {
+    // printf("i2c_init_internal\n");
     struct i2c_s *obj_s = I2C_S(obj);
 
 #ifdef I2C_IP_VERSION_V2
@@ -428,7 +429,11 @@ void i2c_init_internal(i2c_t *obj, const i2c_pinmap_t *pinmap)
 
 #if defined(TARGET_STM32WL) || defined(TARGET_STM32WB)
         /* In Stop2 mode, I2C1 and I2C2 instances are powered down (only I2C3 register content is kept) */
-        sleep_manager_lock_deep_sleep();
+        if (obj_s->deep_sleep_locks == 0 ){
+            sleep_manager_lock_deep_sleep();
+            obj_s->deep_sleep_locks++;
+        }
+
 #endif
     }
 #endif
@@ -442,7 +447,10 @@ void i2c_init_internal(i2c_t *obj, const i2c_pinmap_t *pinmap)
 
 #if defined(TARGET_STM32WL)
         /* In Stop2 mode, I2C1 and I2C2 instances are powered down (only I2C3 register content is kept) */
-        sleep_manager_lock_deep_sleep();
+        if (obj_s->deep_sleep_locks == 0 ){
+            sleep_manager_lock_deep_sleep();
+            obj_s->deep_sleep_locks++;
+        }
 #endif
     }
 #endif
@@ -526,7 +534,10 @@ void i2c_deinit_internal(i2c_t *obj)
     if (obj_s->i2c == I2C_1) {
         __HAL_RCC_I2C1_CLK_DISABLE();
 #if defined(TARGET_STM32WL) || defined(TARGET_STM32WB)
-        sleep_manager_unlock_deep_sleep();
+        if (obj_s->deep_sleep_locks > 0 ){
+            sleep_manager_unlock_deep_sleep();
+            obj_s->deep_sleep_locks--;
+        }
 #endif
     }
 #endif
@@ -534,7 +545,10 @@ void i2c_deinit_internal(i2c_t *obj)
     if (obj_s->i2c == I2C_2) {
         __HAL_RCC_I2C2_CLK_DISABLE();
 #if defined(TARGET_STM32WL)
-        sleep_manager_unlock_deep_sleep();
+        if (obj_s->deep_sleep_locks > 0 ){
+            sleep_manager_unlock_deep_sleep();
+            obj_s->deep_sleep_locks--;
+        }
 #endif
     }
 #endif
@@ -570,6 +584,7 @@ void i2c_init_direct(i2c_t *obj, const i2c_pinmap_t *pinmap)
 static void _i2c_init_direct(i2c_t *obj, const i2c_pinmap_t *pinmap)
 #endif
 {
+    // printf("_i2c_init_direct\n");
     memset(obj, 0, sizeof(*obj));
     i2c_init_internal(obj, pinmap);
 }
@@ -725,6 +740,7 @@ i2c_t *get_i2c_obj(I2C_HandleTypeDef *hi2c)
 
 void i2c_reset(i2c_t *obj)
 {
+    // printf("i2c_reset\n");
     /*  As recommended in i2c_api.h, mainly send stop */
     i2c_stop(obj);
     /* then re-init */
@@ -772,6 +788,7 @@ int i2c_start(i2c_t *obj)
 
 int i2c_stop(i2c_t *obj)
 {
+    // printf("i2c_stop V1\n");
     struct i2c_s *obj_s = I2C_S(obj);
     I2C_TypeDef *i2c = (I2C_TypeDef *)obj_s->i2c;
 
@@ -852,6 +869,7 @@ int i2c_start(i2c_t *obj)
 
 int i2c_stop(i2c_t *obj)
 {
+    // printf("i2c_stop V2\n");
     struct i2c_s *obj_s = I2C_S(obj);
     I2C_HandleTypeDef *handle = &(obj_s->handle);
     int timeout = FLAG_TIMEOUT;
@@ -1021,6 +1039,7 @@ int i2c_byte_write(i2c_t *obj, int data)
  */
 int i2c_read(i2c_t *obj, int address, char *data, int length, int stop)
 {
+    // printf("i2c_read\n");
     struct i2c_s *obj_s = I2C_S(obj);
     I2C_HandleTypeDef *handle = &(obj_s->handle);
     int count = I2C_ERROR_BUS_BUSY, ret = 0;
@@ -1090,6 +1109,7 @@ int i2c_read(i2c_t *obj, int address, char *data, int length, int stop)
 
 int i2c_write(i2c_t *obj, int address, const char *data, int length, int stop)
 {
+    // printf("i2c_write\n");
     struct i2c_s *obj_s = I2C_S(obj);
     I2C_HandleTypeDef *handle = &(obj_s->handle);
     int count = I2C_ERROR_BUS_BUSY, ret = 0;
@@ -1144,6 +1164,7 @@ int i2c_write(i2c_t *obj, int address, const char *data, int length, int stop)
         if ((timeout == 0) || (obj_s->event != I2C_EVENT_TRANSFER_COMPLETE)) {
             DEBUG_PRINTF(" TIMEOUT or error in i2c_write\r\n");
             /* re-init IP to try and get back in a working state */
+            // printf(" TIMEOUT or error in i2c_write\r\n");
             i2c_init_internal(obj, NULL);
         } else {
             count = length;
@@ -1201,6 +1222,7 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 {
+    // printf("HAL_I2C_ErrorCallback\n");
     /* Get object ptr based on handler ptr */
     i2c_t *obj = get_i2c_obj(hi2c);
     struct i2c_s *obj_s = I2C_S(obj);
@@ -1778,6 +1800,26 @@ uint32_t i2c_get_timing(I2CName i2c, uint32_t current_timing, int current_hz,
 
     if ((current_timing == 0) || (current_hz != hz)) {
         switch (pclk) {
+
+#if defined (I2C_PCLK_24M)
+            case I2C_PCLK_24M:
+                switch (hz) {
+                    case 100000:
+                        tim = TIMING_VAL_24M_CLK_100KHZ;
+                        break;
+                    case 400000:
+                        tim = TIMING_VAL_24M_CLK_400KHZ;
+                        break;
+                    case 1000000:
+                        tim = TIMING_VAL_24M_CLK_1MHZ;
+                        break;
+                    default:
+                        MBED_ASSERT((hz == 100000) || (hz == 400000) || \
+                                    (hz == 1000000));
+                        break;
+                }
+                break;
+#endif
 #if defined (I2C_PCLK_32M)
             case I2C_PCLK_32M:
                 switch (hz) {

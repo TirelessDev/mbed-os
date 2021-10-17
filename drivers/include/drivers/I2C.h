@@ -213,6 +213,9 @@ public:
      */
     void abort_transfer();
 
+
+    i2c_t _i2c;
+
 #if !defined(DOXYGEN_ONLY)
 protected:
     /** Lock deep sleep only if it is not yet locked */
@@ -229,10 +232,10 @@ protected:
 #endif
 #endif
 
+
+
 #if !defined(DOXYGEN_ONLY)
 protected:
-
-    i2c_t _i2c;
     int    _hz;
     SingletonPtr<PlatformMutex> _mutex;
     PinName _sda;

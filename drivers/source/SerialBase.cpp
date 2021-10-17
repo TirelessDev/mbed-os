@@ -96,14 +96,15 @@ void SerialBase::attach(Callback<void()> func, IrqType type)
         core_util_critical_section_enter();
         if (func) {
             // lock deep sleep only the first time
-            if (!_irq[type]) {
+            if (!_irq[type] ) { // modified so we dont lock deep sleep for low power uarts which can interrupt correctly&& (_serial.serial.uart != LPUART1_BASE)
                 sleep_manager_lock_deep_sleep();
             }
             _irq[type] = func;
             serial_irq_set(&_serial, (SerialIrq)type, 1);
         } else {
             // unlock deep sleep only the first time
-            if (_irq[type]) {
+
+            if (_irq[type]) { // modified so we dont lock deep sleep for low power uarts which can interrupt correctly&& (_serial.serial.uart != LPUART1_BASE)
                 sleep_manager_unlock_deep_sleep();
             }
             _irq[type] = nullptr;
@@ -177,7 +178,7 @@ void SerialBase::enable_input(bool enable)
             // Enable rx IRQ and lock deep sleep if a rx handler is attached
             // (indicated by rx IRQ callback not empty)
             if (_irq[RxIrq]) {
-                _irq[RxIrq].call();
+                _irq[RxIrq].call(); // why does the irq get called upon enable
                 sleep_manager_lock_deep_sleep();
                 serial_irq_set(&_serial, (SerialIrq)RxIrq, 1);
             }
